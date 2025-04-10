@@ -103,4 +103,25 @@ describe("Voting", () => {
     expect(blueCandidate.candidateVotes.toNumber()).toBe(1);
     expect(blueCandidate.candidateName).toBe("Blue");
   });
+
+  it("updates poll candidate count when initializing candidates", async () => {
+    const [pollAddress] = PublicKey.findProgramAddressSync(
+      [new anchor.BN(1).toArrayLike(Buffer, "le", 8)],
+      votingProgram.programId,
+    );
+    
+    let poll = await votingProgram.account.poll.fetch(pollAddress);
+    const initialCount = poll.candidateAmount.toNumber();
+    console.log("Initial candidate count:", initialCount);
+    
+    await votingProgram.methods.initializeCandidate(
+      "Green",
+      new anchor.BN(1),
+    ).rpc();
+    
+    poll = await votingProgram.account.poll.fetch(pollAddress);
+    console.log("Updated candidate count:", poll.candidateAmount.toNumber());
+    expect(poll.candidateAmount.toNumber()).toBe(initialCount + 1);
+    console.log("Candidate count increased by:", poll.candidateAmount.toNumber() - initialCount);
+  });
 });
