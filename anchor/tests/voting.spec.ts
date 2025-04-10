@@ -71,7 +71,7 @@ describe("Voting", () => {
     expect(blueCandidate.candidateName).toBe("Blue");
   });
 
-  it("vote candidates", async () => {
+  it("vote candidates and track total votes", async () => {
     await votingProgram.methods.vote(
       "Pink",
       new anchor.BN(1),
@@ -102,5 +102,17 @@ describe("Voting", () => {
     console.log(blueCandidate);
     expect(blueCandidate.candidateVotes.toNumber()).toBe(1);
     expect(blueCandidate.candidateName).toBe("Blue");
-  });
+    
+    const [pollAddress] = PublicKey.findProgramAddressSync(
+      [new anchor.BN(1).toArrayLike(Buffer, "le", 8)],
+      votingProgram.programId,
+    );
+    const poll = await votingProgram.account.poll.fetch(pollAddress);
+    
+    console.log("Poll object:", poll);
+    
+    const totalVotes = (poll as any).total_votes || (poll as any).totalVotes;
+    expect(totalVotes.toNumber()).toBe(3);
+    console.log("Total votes in poll:", totalVotes.toNumber());
+});
 });
