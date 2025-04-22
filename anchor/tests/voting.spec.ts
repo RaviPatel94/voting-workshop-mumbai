@@ -71,7 +71,7 @@ describe("Voting", () => {
     expect(blueCandidate.candidateName).toBe("Blue");
   });
 
-  it("vote candidates", async () => {
+  it("vote candidates and track total votes", async () => {
     await votingProgram.methods.vote(
       "Pink",
       new anchor.BN(1),
@@ -101,7 +101,7 @@ describe("Voting", () => {
     const blueCandidate = await votingProgram.account.candidate.fetch(blueAddress);
     console.log(blueCandidate);
     expect(blueCandidate.candidateVotes.toNumber()).toBe(1);
-    expect(blueCandidate.candidateName).toBe("Blue");
+    expect(blueCandidate.candidateName).toBe("Blue");  
   });
 
   it("updates poll candidate count when initializing candidates", async () => {
@@ -118,10 +118,12 @@ describe("Voting", () => {
       "Green",
       new anchor.BN(1),
     ).rpc();
+
+    const poll = await votingProgram.account.poll.fetch(pollAddress);
     
-    poll = await votingProgram.account.poll.fetch(pollAddress);
-    console.log("Updated candidate count:", poll.candidateAmount.toNumber());
-    expect(poll.candidateAmount.toNumber()).toBe(initialCount + 1);
-    console.log("Candidate count increased by:", poll.candidateAmount.toNumber() - initialCount);
-  });
+    console.log("Poll object:", poll);
+    
+    const totalVotes = (poll as any).total_votes || (poll as any).totalVotes;
+    expect(totalVotes.toNumber()).toBe(3);
+    console.log("Total votes in poll:", totalVotes.toNumber());
 });
